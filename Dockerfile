@@ -39,5 +39,5 @@ curl -L 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x1D357EA7D10C932
 source /etc/os-release
 echo "deb [signed-by=/etc/apt/keyrings/mydumper.asc] https://mydumper.github.io/mydumper/repo/apt/debian $VERSION_CODENAME main" >/etc/apt/sources.list.d/mydumper.list
 apt-get update
-apt-get install -y mydumper
+apt-get install -y mydumper mariadb-client
 EOF
