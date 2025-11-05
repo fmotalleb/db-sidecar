@@ -36,3 +36,42 @@ services:
       DB_USER: root
       BACKUP_CRON: "0 0 * * *"
       BACKUP_ON_INIT: yes
+
+  postgres:
+    profiles:
+      - postgres
+    image: library/postgres:16
+    restart: always
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB -h 127.0.0.1 || exit 1",
+        ]
+      interval: 5s
+      timeout: 1s
+      retries: 5
+      start_period: 5s
+    environment:
+      POSTGRES_PASSWORD: '${POSTGRES_PASSWORD?"Please set the POSTGRES_PASSWORD environment variable"}'
+      POSTGRES_DB: '${POSTGRES_DB?"Please set the POSTGRES_DB environment variable"}'
+      POSTGRES_USER: "${POSTGRES_USER:-postgres}"
+
+  side-kar-pg:
+    profiles:
+      - postgres
+    build:
+      context: .
+      target: postgres-utils
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./.temp/pg:/backups
+    environment:
+      DB_HOST: postgres
+      DB_USER: "${POSTGRES_USER:-postgres}"
+      DB_PASS: "${POSTGRES_PASSWORD}"
+      BACKUP_CRON: "0 0 * * *"
+      BACKUP_ON_INIT: "yes"

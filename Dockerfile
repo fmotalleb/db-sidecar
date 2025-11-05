@@ -38,6 +38,8 @@ apt-get update
 apt-get install -y postgresql-client
 EOF
 
+COPY ./pgsql-fs/ /
+
 FROM base AS mysql-utils
 
 RUN --mount=type=tmpfs,target=/var/lib/apt/lists/ \
