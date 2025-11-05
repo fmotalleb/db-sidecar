@@ -1,113 +1,50 @@
-# db-sidecar
+# DB Sidecar
 
-A collection of Docker images designed to run as sidecars to your database containers. These images provide a set of utilities to help with database administration, such as backups, restores, and scheduled tasks.
+This project provides a sidecar container for backing up databases. It supports both MySQL and PostgreSQL.
 
-## Features
+## How it works
 
-- **Scheduled Jobs:** Based on `ghcr.io/fmotalleb/crontab-go`, allowing you to schedule tasks using a simple `crontab` file.
-- **Backup & Sync:** Includes `rclone` for backing up and syncing data to and from various cloud storage providers.
-- **Database Utilities:** Comes in two flavors, with tools for either PostgreSQL or MySQL/MariaDB.
-- **Compression & Archiving:** Includes `zip`, `unzip`, and `zstd` for file compression and archiving.
-- **Efficient Data Transfer:** Includes `rsync` and `pv` for efficient and observable data transfers.
+The sidecar container runs a cron job that periodically backs up the database. The backup command is generated based on the environment variables provided to the container.
 
-## Available Tags
+## Configuration
 
-The following tags are available on `ghcr.io/fmotalleb/db-sidecar`:
+The sidecar is configured using environment variables. The following variables are available:
+
+### General
+
+| Variable | Description | Default |
+|---|---|---|
+| `BACKUP_CRON` | Cron expression for scheduling backups. | **Required** |
+| `DB_HOST` | Database host. | **Required** |
+| `DB_USER` | Database user. | **Required** |
+| `DB_PASS` | Database password. | |
+| `DB_PASS_FILE` | File to read the database password from. | |
+| `DB_NAME` | Database name. If not set, a full backup is triggered. | |
+| `CRON_ON_SUCCESS` | Command to execute on successful cron job completion. | |
+| `CRON_ON_FAIL` | Command to execute on failed cron job completion. | |
+| `BACKUP_ON_INIT` | Whether to perform a backup on container initialization. | `0` |
+| `BACKUP_RETRY` | Number of retries for a failed backup. | `0` |
+| `BACKUP_TIMEOUT` | Timeout for a backup. | `1h` |
+| `BACKUP_DIRECTORY` | Directory to store backups. | `/backups` |
+| `BACKUP_THREADS` | Number of threads to use for backup. | `8` |
+| `BACKUP_NAME` | Name of the backup file. | Current timestamp (`{{ now \| date "2006-01-02_15-04-05" }}`) |
+| `CRON_CONFIG_FILE` | Path to the cron configuration file. | `/tmp/cron.yaml` |
+
+### MySQL
+
+The `mydumper` command is used for MySQL backups.
 
 ### PostgreSQL
 
-- `ghcr.io/fmotalleb/db-sidecar:pg-utils`
-- `ghcr.io/fmotalleb/db-sidecar:pg`
-- `ghcr.io/fmotalleb/db-sidecar:postgres`
+The `pg_dumpall` or `pg_dump` command is used for PostgreSQL backups. If `DB_NAME` is not set, `pg_dumpall` is used. Otherwise, `pg_dump` is used.
 
-These images include the `postgresql-client`.
-
-### MySQL/MariaDB
-
-- `ghcr.io/fmotalleb/db-sidecar:mysql-utils`
-- `ghcr.io/fmotalleb/db-sidecar:mariadb-utils`
-- `ghcr.io/fmotalleb/db-sidecar:mysql`
-- `ghcr.io/fmotalleb/db-sidecar:mariadb`
-
-These images include `mydumper` and `mariadb-client`.
+Note that only pg_dump supports multi threaded dump and restore, always try to provide a db name
 
 ## Usage
 
-### Basic Usage
+Images are published using Docker Bake and are available on the GitHub Container Registry (GHCR). You can retrieve them from there using:
 
-You can run the sidecar container alongside your database container. For example, using `docker-compose`:
+- ghcr.io/fmotalleb/db-sidecar:postgres
+- ghcr.io/fmotalleb/db-sidecar:mariadb
 
-```yaml
-services:
-  db:
-    image: postgres:16
-    environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=testdb
-  db-sidecar:
-    image: ghcr.io/fmotalleb/db-sidecar:pg
-    environment:
-      - PGPASSWORD=password
-    volumes:
-      - ./backups:/backups
-      - ./crontab:/etc/crontab
-      - ./rclone.conf:/.rclone.conf
-```
-
-### Backups with rclone
-
-You can use `rclone` to back up your database to a cloud storage provider.
-
-1.  **Configure rclone:** Create an `rclone.conf` file with your storage provider's configuration.
-
-2.  **Create a backup script:**
-
-    ```bash
-    #!/bin/bash
-    set -eu -o pipefail
-
-    DB_USER="user"
-    DB_HOST="db"
-    DB_NAME="testdb"
-    BACKUP_DIR="/backups"
-    REMOTE_NAME="my-s3-remote"
-    BUCKET_NAME="my-backup-bucket"
-
-    mkdir -p "$BACKUP_DIR"
-    
-    # Dump the database
-    pg_dump -U "$DB_USER" -h "$DB_HOST" -d "$DB_NAME" | gzip > "$BACKUP_DIR/backup.sql.gz"
-
-    # Upload to cloud storage
-    rclone copy "$BACKUP_DIR/backup.sql.gz" "$REMOTE_NAME:$BUCKET_NAME"
-    ```
-
-3.  **Schedule the backup:** Use a `crontab` file to schedule the backup script to run at regular intervals.
-
-    ```
-    # /etc/crontab
-    0 1 * * * /path/to/your/backup-script.sh
-    ```
-
-## Building
-
-To build the images locally, you need to have Docker with `buildx` installed.
-
-```sh
-docker buildx bake
-```
-
-You can also build a specific target:
-
-```sh
-docker buildx bake pg-utils
-```
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a pull request or open an issue.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+To use the sidecar, please checkout the example docker-compose.yaml in the repository.
