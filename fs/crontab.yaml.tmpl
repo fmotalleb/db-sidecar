@@ -1,0 +1,23 @@
+
+jobs:
+  - name: BackupJob
+    concurrency: 1
+    tasks:
+      - command: {{ .Env.BACKUP_COMMAND }}
+        retries: {{ .Env.BACKUP_RETRY }}
+        timeout: {{ .Env.BACKUP_TIMEOUT }}
+        working-dir: {{ .Env.BACKUP_DIRECTORY }}
+        env:
+          SHELL: /bin/bash
+{{- if coll.Has .Env "ON_DONE" }}
+        on-done:
+          - command: {{ .Env.ON_DONE }}
+            working-dir: {{ .Env.BACKUP_DIRECTORY }}
+{{- end }}{{ if coll.Has .Env "ON_FAIL" }}
+        on-fail:
+          - command: {{ .Env.ON_FAIL }}
+            working-dir: {{ .Env.BACKUP_DIRECTORY }}
+{{- end }}
+    events:
+      - cron: "{{ .Env.BACKUP_CRON }}"
+      - on-init: {{ (.Env.BACKUP_ON_INIT | strings.ToLower | regexp.Match `^(1|y|yes|t|true)$`) }}

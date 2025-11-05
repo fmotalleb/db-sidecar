@@ -2,6 +2,7 @@ variable "opts" {
   default = {
     base_image_name= "ghcr.io/fmotalleb/db-sidecar"
     crontab_version = "latest-slim"
+    gomplate_version="v4.3.3"
   }
 }
 
@@ -20,6 +21,7 @@ target "_base" {
   provenance = false
   args = {
     CRONTAB_TAG = "${opts.crontab_version}"
+    GOMPLATE_VERSION = "${opts.gomplate_version}"
   }
 }
 
