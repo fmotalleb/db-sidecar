@@ -6,6 +6,12 @@ This project provides a sidecar container for backing up databases. It supports 
 
 The sidecar container runs a cron job that periodically backs up the database. The backup command is generated based on the environment variables provided to the container.
 
+## Work In Progress
+
+Currently creating backup is done.
+Dependencies for remote file upload are installed (rclone/rsync) and will have their own config flags so user wont need any scripting.
+for now if you want to upload files to somewhere else you can set a `CRON_ON_SUCCESS` command to publish the backup files
+
 ## Configuration
 
 The sidecar is configured using environment variables. The following variables are available:
@@ -48,3 +54,19 @@ Images are published using Docker Bake and are available on the GitHub Container
 - ghcr.io/fmotalleb/db-sidecar:mariadb
 
 To use the sidecar, please checkout the example docker-compose.yaml in the repository.
+
+## Development
+
+Checkout Dockerfile for reference of whats happening
+entrypoint script is global for both images in fs/
+and each db has its own scripts inside \<db>-fs/
+
+so fs looks like
+base fs + global fs (fs/) + specific fs (\<db>-fs/)
+
+and you can build images using
+```bash
+docker buildx bake
+#or
+docker buildx bake pg-utils (or `base` or `mysql-utils`)
+```
