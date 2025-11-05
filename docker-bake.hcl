@@ -9,7 +9,8 @@ variable "opts" {
 group "default" {
   targets = [
     "pg-utils",
-    "mysql-utils"
+    "mysql-utils",
+    "base"
   ]
 }
 
@@ -23,6 +24,15 @@ target "_base" {
     CRONTAB_TAG = "${opts.crontab_version}"
     GOMPLATE_VERSION = "${opts.gomplate_version}"
   }
+}
+
+target "base" {
+  inherits = ["_base"]
+  tags = [
+    "${opts.base_image_name}:base",
+    "${opts.base_image_name}:latest",
+  ]
+  target = "base"
 }
 
 target "pg-utils" {

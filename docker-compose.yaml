@@ -46,7 +46,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB -h 127.0.0.1 || exit 1",
+          "pg_isready -U$POSTGRES_USER -d$POSTGRES_DB -h 127.0.0.1 || exit 1",
         ]
       interval: 5s
       timeout: 1s
@@ -55,7 +55,7 @@ services:
     environment:
       POSTGRES_PASSWORD: '${POSTGRES_PASSWORD?"Please set the POSTGRES_PASSWORD environment variable"}'
       POSTGRES_DB: '${POSTGRES_DB?"Please set the POSTGRES_DB environment variable"}'
-      POSTGRES_USER: "${POSTGRES_USER:-postgres}"
+      POSTGRES_USER: "${POSTGRES_USER?Please set the POSTGRES_USER environment variable}"
 
   side-kar-pg:
     profiles:
@@ -73,5 +73,6 @@ services:
       DB_HOST: postgres
       DB_USER: "${POSTGRES_USER:-postgres}"
       DB_PASS: "${POSTGRES_PASSWORD}"
+      # DB_NAME: "${POSTGRES_DB}"
       BACKUP_CRON: "0 0 * * *"
       BACKUP_ON_INIT: "yes"
