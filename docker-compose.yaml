@@ -62,7 +62,7 @@ services:
       - postgres
     build:
       context: .
-      target: postgres-utils
+      target: pg-utils
     restart: always
     depends_on:
       postgres:
