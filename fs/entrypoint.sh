@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eu
+set -xeu
 
 debug(){
   echo "[DEBUG] $*"
@@ -24,6 +24,15 @@ set-default() {
   fi
 }
 
+warn-empty() {
+  local key="$1"
+  shift
+  local message="$*"
+  if [ -z "${!key:-}" ]; then
+    warn "$key is not set, $message"
+  fi
+}
+
 if [ -z "${1:-}" ]; then
   exec "$@"
 fi
@@ -33,23 +42,25 @@ if [ -f "${DB_PASS_FILE:-/}" ];then
   export DB_PASS
 fi
 
+
 (
-  ${BACKUP_CRON:?"BACKUP_CRON env var must be set"}
-  ${DB_HOST:?"DB_HOST env var must be set"}
-  ${DB_USER:?"DB_USER env var must be set"}
-  [ -z "${DB_PASS}" ]; warn "DB_PASS env var is empty, ignorable"
-  [ -z "${DB_NAME}" ]; warn "DB_NAME env var is empty, triggering a full-backup"
+  echo "${BACKUP_CRON:?"BACKUP_CRON env var must be set"}" >>dev/null
+  echo "${DB_HOST:?"DB_HOST env var must be set"}" >>dev/null
+  echo "${DB_USER:?"DB_USER env var must be set"}" >>dev/null
+  warn-empty DB_PASS "DB_PASS env var is empty, ignorable"
+  warn-empty DB_NAME "DB_NAME env var is empty, triggering a full-backup"
   #TODO: TLS config verification
-  [ -z "${CRON_ON_SUCCESS}" ]; warn "CRON_ON_SUCCESS env var is empty, ignorable"
-  [ -z "${CRON_ON_FAIL}" ]; warn "CRON_ON_FAIL env var is empty, ignorable"
+  warn-empty CRON_ON_SUCCESS "CRON_ON_SUCCESS env var is empty, ignorable"
+  warn-empty CRON_ON_FAIL "CRON_ON_FAIL env var is empty, ignorable"
 )
 
-set-default BACKUP_ON_INIT="0"
+set-default BACKUP_ON_INIT 0
 set-default BACKUP_RETRY 0
 set-default BACKUP_TIMEOUT 1h
 set-default BACKUP_DIRECTORY /backups
-set-default BACKUP_NAME '$(date +"%Y-%m-%d_%H-%M-%S")'
-set-default CRON_CONFIG_FILE="/tmp/cron.yaml"
+set-default BACKUP_THREADS 8
+set-default BACKUP_NAME '{{ now | date "2006-01-02_15-04-05" }}'
+set-default CRON_CONFIG_FILE "/tmp/cron.yaml"
 
 if [ ! -d "$BACKUP_DIRECTORY" ];then
   if [ -f "$BACKUP_DIRECTORY" ];then
@@ -64,4 +75,4 @@ for i in $(find /init.d/*.sh | sort); do
   source "$i"
 done
 gomplate -f /crontab.yaml.tmpl -o "${CRON_CONFIG_FILE}"
-crontab-go run -c "${CRON_CONFIG_FILE}"
+crontab-go -c "${CRON_CONFIG_FILE}"

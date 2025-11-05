@@ -26,6 +26,8 @@ curl -L "${GOMPLATE_URL}" -o /usr/local/bin/gomplate
 chmod +x /usr/local/bin/gomplate
 EOF
 
+COPY ./fs /
+ENTRYPOINT [ "/entrypoint.sh" ]
 FROM base AS pg-utils
 
 RUN --mount=type=tmpfs,target=/var/lib/apt/lists/ \
@@ -49,3 +51,5 @@ echo "deb [signed-by=/etc/apt/keyrings/mydumper.asc] https://mydumper.github.io/
 apt-get update
 apt-get install -y mydumper mariadb-client
 EOF
+
+COPY ./mysql-fs/ /

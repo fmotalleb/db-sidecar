@@ -1,0 +1,38 @@
+services:
+  mariadb:
+    profiles:
+      - mariadb
+    image: library/mariadb:11
+    restart: always
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mariadb -uroot -p$MYSQL_ROOT_PASSWORD -e 'SELECT 1' || exit 1",
+        ]
+      interval: 5s
+      timeout: 1s
+      retries: 5
+      start_period: 5s
+    environment:
+      MYSQL_ROOT_PASSWORD: '${MYSQL_ROOT_PASSWORD?"Please set the MYSQL_ROOT_PASSWORD environment variable"}'
+      MYSQL_DATABASE: '${MYSQL_DATABASE?"Please set the MYSQL_DATABASE environment variable"}'
+  side-kar:
+    profiles:
+      - mariadb
+    build:
+      context: .
+      target: mysql-utils
+    restart: always
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    volumes:
+      - ./.temp/maria:/backups
+    environment:
+      DB_HOST: mariadb
+      DB_PASS: "${MYSQL_ROOT_PASSWORD}"
+      # DB_NAME: "${MYSQL_DATABASE}"
+      DB_USER: root
+      BACKUP_CRON: "0 0 * * *"
+      BACKUP_ON_INIT: yes
