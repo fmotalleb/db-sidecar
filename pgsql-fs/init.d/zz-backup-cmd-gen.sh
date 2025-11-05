@@ -10,14 +10,13 @@ fi
 if [ -z "${DB_NAME:-}" ];then
   cmd+=("pg_dumpall")
 else 
-  cmd+=("pg_dump")
+  cmd+=("pg_dump"  "--format=directory" "--jobs=$BACKUP_THREADS")
 fi
 
 cmd+=(
   "--host='${DB_HOST}'"
   "--username='${DB_USER}'"
-  "--file='${BACKUP_NAME}.sql'"
-  "--format=custom"
+  "--file='${BACKUP_NAME}'"
   "--no-password"
 )
 
