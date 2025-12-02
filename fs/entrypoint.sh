@@ -63,6 +63,11 @@ set-default BACKUP_NAME '{{ now | date "2006-01-02_15-04-05" }}'
 set-default BACKUP_REMOTE_BASEPATH "${BACKUP_DIRECTORY}"
 set-default BACKUP_REMOTE_DIR "${BACKUP_REMOTE_BASEPATH}/${BACKUP_NAME}"
 set-default CRON_CONFIG_FILE "/tmp/cron.yaml"
+set-default RCLONE_TRANSFER_THREADS 8
+set-default RCLONE_CHECKER_THREADS 8
+set-default RCLONE_MULTI_THREAD_STREAMS 4
+
+RCLONE_OPTS=" --transfers=${RCLONE_TRANSFER_THREADS} --checkers=${RCLONE_CHECKER_THREADS} --multi-thread-streams=${RCLONE_MULTI_THREAD_STREAMS}"
 
 if [ ! -d "$BACKUP_DIRECTORY" ];then
   if [ -f "$BACKUP_DIRECTORY" ];then
@@ -92,7 +97,7 @@ if [ -n "${S3_ENDPOINT}" ]; then
       acl="${S3_ACL}" \
       ${S3_REGION_OPT}
 
-  UPLOAD_COMMAND="rclone sync './${BACKUP_NAME}' storage:${BACKUP_REMOTE_DIR}"
+  UPLOAD_COMMAND="rclone sync './${BACKUP_NAME}' storage:${BACKUP_REMOTE_DIR}${RCLONE_OPTS}"
   export UPLOAD_COMMAND
 elif [ -n "${SFTP_SERVER}" ]; then
   # Required
@@ -118,7 +123,7 @@ elif [ -n "${SFTP_SERVER}" ]; then
       ${OPT_KNOWN_HOSTS} \
       ${OPT_KEY_PASSPHRASE}
     
-  UPLOAD_COMMAND="rclone sync './${BACKUP_NAME}' storage:${BACKUP_REMOTE_DIR}"
+  UPLOAD_COMMAND="rclone sync './${BACKUP_NAME}' storage:${BACKUP_REMOTE_DIR}${RCLONE_OPTS}"
   export UPLOAD_COMMAND
 fi
 
