@@ -60,7 +60,7 @@ set-default BACKUP_TIMEOUT 1h
 set-default BACKUP_DIRECTORY /backups
 set-default BACKUP_THREADS 8
 set-default BACKUP_NAME '{{ now | date "2006-01-02_15-04-05" }}'
-set-default BACKUP_REMOTE_BASEPATH "/backups"
+set-default BACKUP_REMOTE_BASEPATH "${BACKUP_DIRECTORY}"
 set-default BACKUP_REMOTE_DIR "${BACKUP_REMOTE_BASEPATH}/${BACKUP_NAME}"
 set-default CRON_CONFIG_FILE "/tmp/cron.yaml"
 
