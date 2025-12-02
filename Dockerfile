@@ -42,8 +42,8 @@ COPY ./pgsql-fs/ /
 
 FROM base AS mysql-utils
 
-RUN --mount=type=tmpfs,target=/var/lib/apt/lists/ \
-  --mount=type=tmpfs,target=/var/cache/apt/archives/ \
+RUN --mount=type=cache,target=/var/lib/apt/lists/ \
+  --mount=type=cache,target=/var/cache/apt/archives/ \
   <<EOF 
 set -eu -o pipefail
 curl -L 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x1D357EA7D10C9320371BDD0279EA15C0E82E34BA&exact=on' \
