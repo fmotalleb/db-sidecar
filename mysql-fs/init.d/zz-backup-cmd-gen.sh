@@ -3,6 +3,7 @@
 cmd=(
   "mydumper" 
   "--host='$DB_HOST'"
+  "--port='${DB_PORT:-3306}'"
   "--user='$DB_USER'"
   "--threads=$BACKUP_THREADS"
   "--outputdir='$BACKUP_NAME'"
